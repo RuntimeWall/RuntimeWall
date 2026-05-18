@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/RuntimeWall/RuntimeWall/apps/api/internal/sandbox"
+	"github.com/RuntimeWall/RuntimeWall/apps/api/internal/sandbox/tracker"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 )
@@ -20,6 +21,10 @@ type resizeMsg struct {
 
 // AttachTerminal opens an interactive shell in the sandbox container over conn.
 func (m *Manager) AttachTerminal(ctx context.Context, sandboxID string, conn sandbox.TerminalConn) error {
+	if m.events != nil {
+		conn = tracker.NewConn(conn, sandboxID, m.events)
+	}
+
 	c, err := m.findContainer(ctx, sandboxID)
 	if err != nil {
 		return err
@@ -121,7 +126,7 @@ func (m *Manager) AttachTerminal(ctx context.Context, sandboxID string, conn san
 func (m *Manager) createShellExec(ctx context.Context, containerID string) (string, error) {
 	for _, shell := range [][]string{{"/bin/bash"}, {"/bin/sh"}} {
 		execResp, err := m.client.ContainerExecCreate(ctx, containerID, types.ExecConfig{
-			User:         "ubuntu",
+			User:         "nobody:nogroup",
 			AttachStdin:  true,
 			AttachStdout: true,
 			AttachStderr: true,

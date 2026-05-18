@@ -48,7 +48,7 @@ func (m *Manager) CreateUbuntu(ctx context.Context) (*sandbox.LaunchResult, erro
 		Image:  imageRef,
 		Cmd:    []string{"sleep", "infinity"},
 		Labels: labels,
-		User:   "ubuntu",
+		User:   "nobody:nogroup",
 	}, hostConfig, nil, nil, name)
 	if err != nil {
 		return nil, fmt.Errorf("create ubuntu sandbox: %w", err)

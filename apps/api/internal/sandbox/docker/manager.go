@@ -20,12 +20,13 @@ const labelSandboxID = "runtimewall.sandbox.id"
 
 // Manager implements sandbox.Manager using the Docker Engine API.
 type Manager struct {
-	client *client.Client
-	cfg    config.Config
+	client   *client.Client
+	cfg      config.Config
+	events sandbox.EventStore
 }
 
 // NewManager connects to the Docker daemon.
-func NewManager(cfg config.Config) (*Manager, error) {
+func NewManager(cfg config.Config, events sandbox.EventStore) (*Manager, error) {
 	opts := []client.Opt{client.FromEnv, client.WithAPIVersionNegotiation()}
 	if cfg.DockerHost != "" {
 		opts = append(opts, client.WithHost(cfg.DockerHost))
@@ -36,7 +37,7 @@ func NewManager(cfg config.Config) (*Manager, error) {
 		return nil, fmt.Errorf("docker client: %w", err)
 	}
 
-	return &Manager{client: cli, cfg: cfg}, nil
+	return &Manager{client: cli, cfg: cfg, events: events}, nil
 }
 
 // Close releases the Docker client connection.
@@ -158,7 +159,13 @@ func (m *Manager) Remove(ctx context.Context, id string) error {
 
 	timeout := 5
 	_ = m.client.ContainerStop(ctx, c.ID, container.StopOptions{Timeout: &timeout})
-	return m.client.ContainerRemove(ctx, c.ID, container.RemoveOptions{Force: true})
+	if err := m.client.ContainerRemove(ctx, c.ID, container.RemoveOptions{Force: true}); err != nil {
+		return err
+	}
+	if m.events != nil {
+		m.events.Clear(id)
+	}
+	return nil
 }
 
 func (m *Manager) findContainer(ctx context.Context, sandboxID string) (types.Container, error) {
