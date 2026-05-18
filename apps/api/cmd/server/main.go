@@ -11,6 +11,7 @@ import (
 
 	"github.com/RuntimeWall/RuntimeWall/apps/api/internal/config"
 	sandboxdocker "github.com/RuntimeWall/RuntimeWall/apps/api/internal/sandbox/docker"
+	"github.com/RuntimeWall/RuntimeWall/apps/api/internal/sandbox/tracker"
 	"github.com/RuntimeWall/RuntimeWall/apps/api/internal/server"
 )
 
@@ -18,10 +19,11 @@ func main() {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
 	cfg := config.Load()
+	eventStore := tracker.NewStore()
 
 	var sandboxes *sandboxdocker.Manager
 	if cfg.EnableDocker {
-		mgr, err := sandboxdocker.NewManager(cfg)
+		mgr, err := sandboxdocker.NewManager(cfg, eventStore)
 		if err != nil {
 			slog.Warn("docker sandbox manager unavailable; sandbox routes disabled", "error", err)
 		} else {
@@ -32,7 +34,7 @@ func main() {
 		slog.Info("docker sandbox manager disabled via ENABLE_DOCKER=false")
 	}
 
-	srv := server.New(cfg, sandboxes)
+	srv := server.New(cfg, sandboxes, eventStore)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {

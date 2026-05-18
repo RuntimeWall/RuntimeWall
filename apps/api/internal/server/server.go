@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
 
 // Server is the RuntimeWall HTTP API.
 type Server struct {
@@ -24,7 +24,7 @@ type Server struct {
 }
 
 // New wires routes and dependencies.
-func New(cfg config.Config, sandboxes sandbox.Manager) *Server {
+func New(cfg config.Config, sandboxes sandbox.Manager, events sandbox.EventStore) *Server {
 	var attacher sandbox.TerminalAttacher
 	if a, ok := sandboxes.(sandbox.TerminalAttacher); ok {
 		attacher = a
@@ -39,10 +39,16 @@ func New(cfg config.Config, sandboxes sandbox.Manager) *Server {
 	sandboxHandler := handler.NewSandboxes(sandboxes)
 	terminalHandler := handler.NewTerminal(attacher)
 	terminalUI := handler.NewTerminalUI()
+	commandsHandler := handler.NewCommands(events)
+	eventsHandler := handler.NewEvents(events)
+	policiesHandler := handler.NewPolicies(events)
 
-	// Long-lived WebSocket and terminal UI (no request timeout).
+	// Long-lived streams (no request timeout).
 	r.Get("/terminal/{id}", terminalUI.Serve)
 	r.Get("/api/v1/sandboxes/{id}/attach", terminalHandler.Attach)
+	r.Get("/api/v1/sandboxes/{id}/commands/stream", commandsHandler.Stream)
+	r.Get("/api/v1/sandboxes/{id}/events/stream", eventsHandler.Stream)
+	r.Get("/api/v1/sandboxes/{id}/events/ws", eventsHandler.WebSocket)
 
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Timeout(60 * time.Second))
@@ -58,6 +64,10 @@ func New(cfg config.Config, sandboxes sandbox.Manager) *Server {
 					r.Get("/", sandboxHandler.Get)
 					r.Delete("/", sandboxHandler.Delete)
 					r.Post("/stop", sandboxHandler.Stop)
+					r.Get("/commands", commandsHandler.List)
+					r.Get("/events", eventsHandler.List)
+					r.Get("/policy", policiesHandler.Get)
+					r.Put("/policy", policiesHandler.Put)
 				})
 			})
 		})
