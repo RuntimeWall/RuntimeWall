@@ -8,10 +8,11 @@ import (
 
 // Config holds runtime configuration for the API server.
 type Config struct {
-	Addr             string
-	ReadTimeout      time.Duration
-	WriteTimeout     time.Duration
-	ShutdownTimeout  time.Duration
+	Addr                string
+	ReadHeaderTimeout   time.Duration
+	ReadTimeout         time.Duration
+	WriteTimeout        time.Duration
+	ShutdownTimeout     time.Duration
 	DockerHost       string
 	SandboxImage       string
 	UbuntuSandboxImage string
@@ -23,10 +24,11 @@ type Config struct {
 // Load reads configuration from environment variables.
 func Load() Config {
 	return Config{
-		Addr:            envOr("HTTP_ADDR", ":8080"),
-		ReadTimeout:     envDuration("HTTP_READ_TIMEOUT", 15*time.Second),
-		WriteTimeout:    envDuration("HTTP_WRITE_TIMEOUT", 15*time.Second),
-		ShutdownTimeout: envDuration("HTTP_SHUTDOWN_TIMEOUT", 10*time.Second),
+		Addr:              envOr("HTTP_ADDR", ":8080"),
+		ReadHeaderTimeout: envDuration("HTTP_READ_HEADER_TIMEOUT", 10*time.Second),
+		ReadTimeout:       envDuration("HTTP_READ_TIMEOUT", 0),
+		WriteTimeout:      envDuration("HTTP_WRITE_TIMEOUT", 0),
+		ShutdownTimeout:   envDuration("HTTP_SHUTDOWN_TIMEOUT", 10*time.Second),
 		DockerHost:      envOr("DOCKER_HOST", ""),
 		SandboxImage:       envOr("SANDBOX_IMAGE", "runtimewall/sandbox:latest"),
 		UbuntuSandboxImage: envOr("UBUNTU_SANDBOX_IMAGE", "ubuntu:22.04"),

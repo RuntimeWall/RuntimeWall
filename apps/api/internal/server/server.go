@@ -25,26 +25,40 @@ type Server struct {
 
 // New wires routes and dependencies.
 func New(cfg config.Config, sandboxes sandbox.Manager) *Server {
+	var attacher sandbox.TerminalAttacher
+	if a, ok := sandboxes.(sandbox.TerminalAttacher); ok {
+		attacher = a
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
 
 	health := handler.NewHealth(sandboxes, version)
 	sandboxHandler := handler.NewSandboxes(sandboxes)
+	terminalHandler := handler.NewTerminal(attacher)
+	terminalUI := handler.NewTerminalUI()
 
-	r.Get("/health", health.ServeHTTP)
-	r.Post("/sandbox/create", sandboxHandler.CreateUbuntu)
+	// Long-lived WebSocket and terminal UI (no request timeout).
+	r.Get("/terminal/{id}", terminalUI.Serve)
+	r.Get("/api/v1/sandboxes/{id}/attach", terminalHandler.Attach)
 
-	r.Route("/api/v1", func(r chi.Router) {
-		r.Route("/sandboxes", func(r chi.Router) {
-			r.Get("/", sandboxHandler.List)
-			r.Post("/", sandboxHandler.Create)
-			r.Route("/{id}", func(r chi.Router) {
-				r.Get("/", sandboxHandler.Get)
-				r.Delete("/", sandboxHandler.Delete)
-				r.Post("/stop", sandboxHandler.Stop)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.Timeout(60 * time.Second))
+
+		r.Get("/health", health.ServeHTTP)
+		r.Post("/sandbox/create", sandboxHandler.CreateUbuntu)
+
+		r.Route("/api/v1", func(r chi.Router) {
+			r.Route("/sandboxes", func(r chi.Router) {
+				r.Get("/", sandboxHandler.List)
+				r.Post("/", sandboxHandler.Create)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Get("/", sandboxHandler.Get)
+					r.Delete("/", sandboxHandler.Delete)
+					r.Post("/stop", sandboxHandler.Stop)
+				})
 			})
 		})
 	})
@@ -53,10 +67,11 @@ func New(cfg config.Config, sandboxes sandbox.Manager) *Server {
 		cfg:    cfg,
 		docker: sandboxes,
 		http: &http.Server{
-			Addr:         cfg.Addr,
-			Handler:      r,
-			ReadTimeout:  cfg.ReadTimeout,
-			WriteTimeout: cfg.WriteTimeout,
+			Addr:              cfg.Addr,
+			Handler:           r,
+			ReadHeaderTimeout: cfg.ReadHeaderTimeout,
+			ReadTimeout:       cfg.ReadTimeout,
+			WriteTimeout:      cfg.WriteTimeout,
 		},
 	}
 }
