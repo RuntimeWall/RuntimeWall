@@ -35,6 +35,7 @@ func New(cfg config.Config, sandboxes sandbox.Manager) *Server {
 	sandboxHandler := handler.NewSandboxes(sandboxes)
 
 	r.Get("/health", health.ServeHTTP)
+	r.Post("/sandbox/create", sandboxHandler.CreateUbuntu)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Route("/sandboxes", func(r chi.Router) {

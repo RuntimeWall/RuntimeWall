@@ -13,10 +13,11 @@ type Config struct {
 	WriteTimeout     time.Duration
 	ShutdownTimeout  time.Duration
 	DockerHost       string
-	SandboxImage     string
-	SandboxNetwork   string
-	SandboxLabel     string
-	EnableDocker     bool
+	SandboxImage       string
+	UbuntuSandboxImage string
+	SandboxNetwork     string
+	SandboxLabel       string
+	EnableDocker       bool
 }
 
 // Load reads configuration from environment variables.
@@ -27,8 +28,9 @@ func Load() Config {
 		WriteTimeout:    envDuration("HTTP_WRITE_TIMEOUT", 15*time.Second),
 		ShutdownTimeout: envDuration("HTTP_SHUTDOWN_TIMEOUT", 10*time.Second),
 		DockerHost:      envOr("DOCKER_HOST", ""),
-		SandboxImage:    envOr("SANDBOX_IMAGE", "runtimewall/sandbox:latest"),
-		SandboxNetwork:  envOr("SANDBOX_NETWORK", "runtimewall"),
+		SandboxImage:       envOr("SANDBOX_IMAGE", "runtimewall/sandbox:latest"),
+		UbuntuSandboxImage: envOr("UBUNTU_SANDBOX_IMAGE", "ubuntu:22.04"),
+		SandboxNetwork:     envOr("SANDBOX_NETWORK", "runtimewall"),
 		SandboxLabel:    envOr("SANDBOX_LABEL", "runtimewall.managed"),
 		EnableDocker:    envBool("ENABLE_DOCKER", true),
 	}

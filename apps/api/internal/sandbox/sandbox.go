@@ -36,9 +36,17 @@ type CreateOptions struct {
 	Cmd   []string          `json:"cmd,omitempty"`
 }
 
+// LaunchResult is returned when an isolated sandbox container is created.
+type LaunchResult struct {
+	ContainerID string `json:"container_id"`
+	Image       string `json:"image"`
+	Status      Status `json:"status"`
+}
+
 // Manager defines Docker sandbox lifecycle operations.
 type Manager interface {
 	Ping(ctx context.Context) error
+	CreateUbuntu(ctx context.Context) (*LaunchResult, error)
 	Create(ctx context.Context, opts CreateOptions) (*Sandbox, error)
 	Get(ctx context.Context, id string) (*Sandbox, error)
 	List(ctx context.Context) ([]*Sandbox, error)
