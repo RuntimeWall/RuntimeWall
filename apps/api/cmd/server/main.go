@@ -36,6 +36,10 @@ func main() {
 
 	srv := server.New(cfg, sandboxes, eventStore)
 
+	if sandboxes != nil && cfg.SandboxTTL > 0 {
+		srv.AttachSweeper(sandboxdocker.NewSweeper(sandboxes, cfg.SandboxTTL, cfg.SandboxSweepEvery))
+	}
+
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("server failed", "error", err)

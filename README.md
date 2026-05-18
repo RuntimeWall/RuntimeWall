@@ -340,13 +340,20 @@ Example event:
 | `GET` | `/api/v1/sandboxes/{id}/policy` | Get sandbox security policy |
 | `PUT` | `/api/v1/sandboxes/{id}/policy` | Update sandbox security policy |
 
-### Frontend (coming soon)
+### Frontend dashboard
+
+A Next.js dashboard lives in `apps/web` with a sandbox table, a live security
+events feed (Server-Sent Events), an embedded xterm.js terminal connected to
+the WebSocket attach endpoint, and a per-sandbox policy editor.
 
 ```bash
 cd apps/web
 npm install
+cp .env.local.example .env.local   # points NEXT_PUBLIC_API_URL at http://localhost:8080
 npm run dev
 ```
+
+Then open <http://localhost:3000>.
 
 ### One-command local dev (planned)
 

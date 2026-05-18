@@ -13,28 +13,32 @@ type Config struct {
 	ReadTimeout         time.Duration
 	WriteTimeout        time.Duration
 	ShutdownTimeout     time.Duration
-	DockerHost       string
-	SandboxImage       string
-	UbuntuSandboxImage string
-	SandboxNetwork     string
-	SandboxLabel       string
-	EnableDocker       bool
+	DockerHost          string
+	SandboxImage        string
+	UbuntuSandboxImage  string
+	SandboxNetwork      string
+	SandboxLabel        string
+	EnableDocker        bool
+	SandboxTTL          time.Duration
+	SandboxSweepEvery   time.Duration
 }
 
 // Load reads configuration from environment variables.
 func Load() Config {
 	return Config{
-		Addr:              envOr("HTTP_ADDR", ":8080"),
-		ReadHeaderTimeout: envDuration("HTTP_READ_HEADER_TIMEOUT", 10*time.Second),
-		ReadTimeout:       envDuration("HTTP_READ_TIMEOUT", 0),
-		WriteTimeout:      envDuration("HTTP_WRITE_TIMEOUT", 0),
-		ShutdownTimeout:   envDuration("HTTP_SHUTDOWN_TIMEOUT", 10*time.Second),
-		DockerHost:      envOr("DOCKER_HOST", ""),
+		Addr:               envOr("HTTP_ADDR", ":8080"),
+		ReadHeaderTimeout:  envDuration("HTTP_READ_HEADER_TIMEOUT", 10*time.Second),
+		ReadTimeout:        envDuration("HTTP_READ_TIMEOUT", 0),
+		WriteTimeout:       envDuration("HTTP_WRITE_TIMEOUT", 0),
+		ShutdownTimeout:    envDuration("HTTP_SHUTDOWN_TIMEOUT", 10*time.Second),
+		DockerHost:         envOr("DOCKER_HOST", ""),
 		SandboxImage:       envOr("SANDBOX_IMAGE", "runtimewall/sandbox:latest"),
 		UbuntuSandboxImage: envOr("UBUNTU_SANDBOX_IMAGE", "ubuntu:22.04"),
 		SandboxNetwork:     envOr("SANDBOX_NETWORK", "runtimewall"),
-		SandboxLabel:    envOr("SANDBOX_LABEL", "runtimewall.managed"),
-		EnableDocker:    envBool("ENABLE_DOCKER", true),
+		SandboxLabel:       envOr("SANDBOX_LABEL", "runtimewall.managed"),
+		EnableDocker:       envBool("ENABLE_DOCKER", true),
+		SandboxTTL:         envDuration("SANDBOX_TTL", 30*time.Minute),
+		SandboxSweepEvery:  envDuration("SANDBOX_SWEEP_INTERVAL", time.Minute),
 	}
 }
 
