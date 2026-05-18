@@ -14,13 +14,21 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-const version = "0.2.0"
+const version = "0.3.0"
+
+// sweeperRunner is implemented by long-running background sweepers (see
+// sandbox/docker.Sweeper). It is wired in if the docker manager provides one.
+type sweeperRunner interface {
+	Start(ctx context.Context)
+	Stop()
+}
 
 // Server is the RuntimeWall HTTP API.
 type Server struct {
-	cfg    config.Config
-	http   *http.Server
-	docker sandbox.Manager
+	cfg     config.Config
+	http    *http.Server
+	docker  sandbox.Manager
+	sweeper sweeperRunner
 }
 
 // New wires routes and dependencies.
@@ -34,6 +42,7 @@ func New(cfg config.Config, sandboxes sandbox.Manager, events sandbox.EventStore
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(cors)
 
 	health := handler.NewHealth(sandboxes, version)
 	sandboxHandler := handler.NewSandboxes(sandboxes)
@@ -60,6 +69,7 @@ func New(cfg config.Config, sandboxes sandbox.Manager, events sandbox.EventStore
 			r.Route("/sandboxes", func(r chi.Router) {
 				r.Get("/", sandboxHandler.List)
 				r.Post("/", sandboxHandler.Create)
+				r.Post("/cleanup", sandboxHandler.Cleanup)
 				r.Route("/{id}", func(r chi.Router) {
 					r.Get("/", sandboxHandler.Get)
 					r.Delete("/", sandboxHandler.Delete)
@@ -86,14 +96,28 @@ func New(cfg config.Config, sandboxes sandbox.Manager, events sandbox.EventStore
 	}
 }
 
-// ListenAndServe starts the HTTP server.
+// AttachSweeper registers a background sweeper that will be started with the
+// server and stopped on shutdown. Calling with nil is a no-op.
+func (s *Server) AttachSweeper(sw sweeperRunner) {
+	if sw != nil {
+		s.sweeper = sw
+	}
+}
+
+// ListenAndServe starts the HTTP server (and background sweeper, if any).
 func (s *Server) ListenAndServe() error {
-	slog.Info("runtime wall api listening", "addr", s.cfg.Addr, "version", version)
+	if s.sweeper != nil {
+		s.sweeper.Start(context.Background())
+	}
+	slog.Info("runtimewall api listening", "addr", s.cfg.Addr, "version", version)
 	return s.http.ListenAndServe()
 }
 
 // Shutdown gracefully stops the server and closes Docker resources.
 func (s *Server) Shutdown(ctx context.Context) error {
+	if s.sweeper != nil {
+		s.sweeper.Stop()
+	}
 	if err := s.http.Shutdown(ctx); err != nil {
 		return err
 	}

@@ -1,22 +1,34 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/RuntimeWall/RuntimeWall/apps/api/internal/sandbox"
 	"github.com/go-chi/chi/v5"
 )
 
+// Sweeper is implemented by managers that can reap stopped sandboxes.
+type Sweeper interface {
+	SweepStopped(ctx context.Context, ttl time.Duration) ([]string, error)
+}
+
 // Sandboxes exposes REST endpoints for Docker sandbox lifecycle.
 type Sandboxes struct {
 	manager sandbox.Manager
+	sweeper Sweeper
 }
 
 // NewSandboxes creates a sandbox handler.
 func NewSandboxes(manager sandbox.Manager) *Sandboxes {
-	return &Sandboxes{manager: manager}
+	h := &Sandboxes{manager: manager}
+	if s, ok := manager.(Sweeper); ok {
+		h.sweeper = s
+	}
+	return h
 }
 
 // List handles GET /api/v1/sandboxes.
@@ -99,6 +111,39 @@ func (h *Sandboxes) Stop(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "stopped"})
+}
+
+// Cleanup handles POST /api/v1/sandboxes/cleanup. It triggers an immediate
+// sweep of stopped sandboxes older than ttl (default 0 = remove all stopped).
+func (h *Sandboxes) Cleanup(w http.ResponseWriter, r *http.Request) {
+	if h.manager == nil || h.sweeper == nil {
+		writeError(w, http.StatusServiceUnavailable, "sandbox sweeper unavailable")
+		return
+	}
+
+	ttl := time.Duration(0)
+	if v := r.URL.Query().Get("ttl"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			ttl = d
+		}
+	}
+	// A zero ttl would no-op; treat empty query as "reap everything stopped".
+	if ttl == 0 {
+		ttl = time.Nanosecond
+	}
+
+	removed, err := h.sweeper.SweepStopped(r.Context(), ttl)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if removed == nil {
+		removed = []string{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"removed": removed,
+		"count":   len(removed),
+	})
 }
 
 // Delete handles DELETE /api/v1/sandboxes/{id}.
