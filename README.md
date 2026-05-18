@@ -25,7 +25,7 @@ _Run AI agents securely inside isolated sandboxes with runtime monitoring, sessi
 
 </div>
 
-> **Project status:** Early development. This repository currently contains project documentation and licensing. Application code (`apps/`, `runtime/`, etc.) is landing incrementally — see the [roadmap](#roadmap) and [open issues](https://github.com/RuntimeWall/RuntimeWall/issues).
+> **Project status:** Early development. The Go API (`apps/api`) is available with health checks, sandbox management, and isolated Ubuntu container creation. Other components are landing incrementally — see the [roadmap](#roadmap) and [open issues](https://github.com/RuntimeWall/RuntimeWall/issues).
 
 ---
 
@@ -209,6 +209,8 @@ Agents do not receive long-lived credentials directly. Planned support for:
 
 ```text
 RuntimeWall/
+├── apps/
+│   └── api/          # Go HTTP API
 ├── LICENSE
 └── README.md
 ```
@@ -238,13 +240,10 @@ RuntimeWall/
 
 ## Quick Start
 
-> Quick Start will be enabled as `apps/web` and `apps/api` land in the repository. Track progress on the [roadmap](#roadmap).
+### Prerequisites
 
-### Prerequisites (planned)
-
-- Node.js 20+
 - Go 1.22+
-- Docker 24+
+- Docker 24+ (required for sandbox endpoints)
 
 ### Clone the repository
 
@@ -253,19 +252,47 @@ git clone https://github.com/RuntimeWall/RuntimeWall.git
 cd RuntimeWall
 ```
 
+### API
+
+```bash
+cd apps/api
+go mod download
+make run
+```
+
+Verify in another terminal:
+
+```bash
+# Health check
+curl -s http://localhost:8080/health
+
+# List sandboxes
+curl -s http://localhost:8080/api/v1/sandboxes
+
+# Launch isolated Ubuntu sandbox
+curl -s -X POST http://localhost:8080/sandbox/create
+```
+
+The `/sandbox/create` endpoint returns `container_id`, `image`, and `status`.
+
+### API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | API and Docker daemon status |
+| `POST` | `/sandbox/create` | Launch isolated Ubuntu container |
+| `GET` | `/api/v1/sandboxes` | List managed sandboxes |
+| `POST` | `/api/v1/sandboxes` | Create sandbox |
+| `GET` | `/api/v1/sandboxes/{id}` | Get sandbox |
+| `POST` | `/api/v1/sandboxes/{id}/stop` | Stop sandbox |
+| `DELETE` | `/api/v1/sandboxes/{id}` | Remove sandbox |
+
 ### Frontend (coming soon)
 
 ```bash
 cd apps/web
 npm install
 npm run dev
-```
-
-### API (coming soon)
-
-```bash
-cd apps/api
-go run ./cmd/server
 ```
 
 ### One-command local dev (planned)
