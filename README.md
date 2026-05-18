@@ -269,11 +269,20 @@ curl -s http://localhost:8080/health
 # List sandboxes
 curl -s http://localhost:8080/api/v1/sandboxes
 
-# Launch isolated Ubuntu sandbox
+# Launch isolated Ubuntu sandbox (save the "id" from the response)
 curl -s -X POST http://localhost:8080/sandbox/create
+
+# Open browser terminal (replace SANDBOX_ID)
+open http://localhost:8080/terminal/SANDBOX_ID
 ```
 
-The `/sandbox/create` endpoint returns `container_id`, `image`, and `status`.
+The `/sandbox/create` endpoint returns `id`, `container_id`, `image`, and `status`.
+
+**CLI terminal attach** (requires [websocat](https://github.com/vi/websocat)):
+
+```bash
+websocat ws://localhost:8080/api/v1/sandboxes/SANDBOX_ID/attach
+```
 
 ### API endpoints
 
@@ -286,6 +295,8 @@ The `/sandbox/create` endpoint returns `container_id`, `image`, and `status`.
 | `GET` | `/api/v1/sandboxes/{id}` | Get sandbox |
 | `POST` | `/api/v1/sandboxes/{id}/stop` | Stop sandbox |
 | `DELETE` | `/api/v1/sandboxes/{id}` | Remove sandbox |
+| `GET` (WebSocket) | `/api/v1/sandboxes/{id}/attach` | Real-time CLI terminal |
+| `GET` | `/terminal/{id}` | Browser terminal (xterm.js) |
 
 ### Frontend (coming soon)
 

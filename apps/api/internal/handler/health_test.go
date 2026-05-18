@@ -15,6 +15,7 @@ type stubManager struct{}
 func (stubManager) Ping(context.Context) error { return nil }
 func (stubManager) CreateUbuntu(context.Context) (*sandbox.LaunchResult, error) {
 	return &sandbox.LaunchResult{
+		ID:          "sandbox-test-id",
 		ContainerID: "abc123",
 		Image:       "ubuntu:22.04",
 		Status:      sandbox.StatusRunning,

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RuntimeWall Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0b1020;
+      color: #e2e8f0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+    header strong { color: #38bdf8; }
+    #status { color: #94a3b8; }
+    #terminal { flex: 1; padding: 8px; }
+    .xterm { height: 100%; }
+  </style>
+</head>
+<body>
+  <header>
+    <span>RuntimeWall</span>
+    <strong id="sandbox-label">Sandbox</strong>
+    <span id="status">connecting...</span>
+  </header>
+  <div id="terminal"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+  <script>
+    const sandboxId = window.location.pathname.replace(/\/$/, "").split("/").pop();
+    const wsPath = "/api/v1/sandboxes/" + sandboxId + "/attach";
+    document.getElementById("sandbox-label").textContent = "Sandbox " + sandboxId;
+    document.title = "RuntimeWall Terminal — " + sandboxId;
+
+    const statusEl = document.getElementById("status");
+
+    const term = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: "ui-monospace, Menlo, Monaco, Consolas, monospace",
+      theme: {
+        background: "#0b1020",
+        foreground: "#e2e8f0",
+        cursor: "#38bdf8",
+      },
+    });
+    const fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById("terminal"));
+    fitAddon.fit();
+
+    const proto = location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(proto + "//" + location.host + wsPath);
+    ws.binaryType = "arraybuffer";
+
+    function sendResize() {
+      ws.send(JSON.stringify({
+        type: "resize",
+        cols: term.cols,
+        rows: term.rows,
+      }));
+    }
+
+    ws.onopen = () => {
+      statusEl.textContent = "connected";
+      statusEl.style.color = "#4ade80";
+      sendResize();
+    };
+
+    ws.onmessage = (ev) => {
+      const data = ev.data instanceof ArrayBuffer
+        ? new Uint8Array(ev.data)
+        : new TextEncoder().encode(ev.data);
+      term.write(data);
+    };
+
+    ws.onclose = () => {
+      statusEl.textContent = "disconnected";
+      statusEl.style.color = "#f87171";
+      term.writeln("\r\n\r\n[session closed]");
+    };
+
+    ws.onerror = () => {
+      statusEl.textContent = "error";
+      statusEl.style.color = "#f87171";
+    };
+
+    term.onData((data) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(new TextEncoder().encode(data));
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      fitAddon.fit();
+      if (ws.readyState === WebSocket.OPEN) sendResize();
+    });
+  </script>
+</body>
+</html>

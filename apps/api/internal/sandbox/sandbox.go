@@ -38,6 +38,7 @@ type CreateOptions struct {
 
 // LaunchResult is returned when an isolated sandbox container is created.
 type LaunchResult struct {
+	ID          string `json:"id"`
 	ContainerID string `json:"container_id"`
 	Image       string `json:"image"`
 	Status      Status `json:"status"`
